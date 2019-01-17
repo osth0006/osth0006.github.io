@@ -2,14 +2,14 @@
 $(function()
 {
 	var canvas = $("#canvas")[0];
-	var ctx = canvas.getContext('2d');
+	var ctx = canvas.getContext('3d');
 	var svg = !canvas.getContext || !ctx;
 	if (svg)
 	{
 		ctx = Raphael(document.body, '100%', '100%');
 		canvas.remove();
 	}
-	
+
 	var mouse = new Vector(0, 0);
 
 	var world = {
@@ -174,5 +174,6 @@ $(function()
 	setTimeout(function () {
 	  window.scrollTo(0, 1);
 	}, 1000);
+
 });
 

@@ -8,7 +8,7 @@ function Fish(mass, x, y, color)
 	this.lookRange = this.mass * 200;
 	this.length = mass * 20;
 	this.base = this.length * .5;
-	this.HALF_PI = Math.PI * .5;
+	this.HALF_PI = Math.PI * .125;
 	this.RAD_TO_DEG = 57.29577951308232;
 	this.location = new Vector(x, y);
 	this.velocity = new Vector(0, 0);
