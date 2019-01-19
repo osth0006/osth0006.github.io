@@ -2,7 +2,7 @@
 $(function()
 {
 	var canvas = $("#canvas")[0];
-	var ctx = canvas.getContext('3d');
+	var ctx = canvas.getContext('2d');
 	var svg = !canvas.getContext || !ctx;
 	if (svg)
 	{
