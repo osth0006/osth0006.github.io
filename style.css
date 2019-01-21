@@ -15,10 +15,21 @@ body {
   color: black;
 }
 
-.text {
-  max-width: 400px;
-  margin-left: -200px;
+.main_text {
+  max-width: 600px;
+  margin-left: -300px;
   margin-top: -140px;
+  left: 50%;
+  top: 50%;
+  position: absolute;
+  text-shadow: 0px 0px 20px white;
+  line-height: 1.2;
+}
+
+.text {
+  max-width: 900px;
+  margin-left: -450px;
+  margin-top: -350px;
   left: 50%;
   top: 50%;
   position: absolute;
@@ -35,20 +46,38 @@ a:hover {
   text-decoration: underline;
 }
 
-ul {
+div.nav {
+  max-width: 900px;
+  margin-left: -450px;
+  left: 50%;
+  position: absolute;
+  text-shadow: 0px 0px 20px white;
+  line-height: 1.2;
+}
+
+ul.main {
   padding: 0px;
   text-align: center;
 }
 
 li {
   display: inline-block;
+  padding-top: 5px;
 }
 
-li:after {
+li.main:after {
   content: " |";
 }
 
-li:last-child:after {
+li.main:last-child:after {
+    content: "";
+}
+
+li.nav:after {
+  content: " |";
+}
+
+li.nav:last-child:after {
     content: "";
 }
 
