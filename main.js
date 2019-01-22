@@ -4,11 +4,11 @@ $(function()
 	var canvas = $("#canvas")[0];
 	var ctx = canvas.getContext('2d');
 	var svg = !canvas.getContext || !ctx;
-	if (svg)
+	/*if (svg)
 	{
 		ctx = Raphael(document.body, '100%', '100%');
 		canvas.remove();
-	}
+	}*/
 
 	var mouse = new Vector(0, 0);
 
@@ -83,7 +83,10 @@ $(function()
 	$(window).resize();
 
 	for (var i = 0; i < numFish; i++)
-		world.creatures.push(new Fish(.5 + (Math.random()*Math.random()*Math.random()*Math.random()*2), Math.random() * world.width, Math.random() * world.height));
+		world.creatures.push(new Fish(
+		.5 + (Math.random()*Math.random()*Math.random()*Math.random()*2),
+		Math.random() * world.width,
+		Math.random() * world.height));
 	
 	var timeline = null;
 

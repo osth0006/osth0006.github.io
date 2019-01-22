@@ -14,7 +14,7 @@ function Fish(mass, x, y, color)
 	this.velocity = new Vector(0, 0);
 	this.acceleration = new Vector(0, 0);
 	this.wandering = new Vector(.2,.2);
-	this.color = color || "#000000";
+	this.color = color || "#8ae2a4"; //"#000000";
 }
 (function(){
 	var id = 0;
@@ -213,7 +213,7 @@ Fish.prototype = {
 			this.shoalList = null;
 			ctx.globalAlpha = old;
 		} else {
-			this.color = "black";
+			this.color = "#8ae2a4";//"black";
 			if (this.svg){
 				if(this.avoidSVG)
 				{
@@ -410,7 +410,7 @@ Fish.prototype = {
 		this.applyForce(cohe);
 
 		if (Fish.showBehavior)
-			this.color = "black";
+			this.color = "#8ae2a4";//"black";
 	},
 	avoid: function(creatures, dist)
 	{
