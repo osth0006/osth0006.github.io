@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Computer Vision</title>
+	<meta name="description" content="Object detection pipeline.">
+	<meta name="viewport" content="target-densitydpi=device-dpi, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1" />
+	<link href="https://fonts.googleapis.com/css?family=Inconsolata:400,700" rel="stylesheet" type="text/css">
+	<link href="style.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div class="nav">
+        <li class="nav"><a href="./index.html">home</a></li>
+        <li class="nav"><a href="https://github.com/osth0006" target="blank">github</a></li>
+        <li class="nav"><a href="https://github.com/osth0006/dissertation" target="blank">dissertation</a></li>
+        <li class="nav"><a href="./computer_vision.html">computer vision</a></li>
+        <li class="nav"><a href="./clustering.html">clustering</a></li>
+        <li class="nav"><a href="./entity_extraction.html">entity extraction</a></li>
+        <li class="nav"><a href="./adversarial_networks.html">adversarial networks</a></li>
+    </div>
+
+    <div class="text">
+        <p>
+            <b>Objective:</b>
+            <br>
+        </p>
+        <p>Create a computer vision pipeline for my home security setup.</p>
+        <ul>
+            <li>Computing Environment: Linux - Fedora 29 | Python 3+</li>
+            <li>Hardware: HP Z440 Workstation with NVIDIA Titan X GPU</li>
+            <li>Deep Learning Framework: <a href="https://pytorch.org" target="blank">PyTorch</a></li>
+            <li>3-class object detection model: Animal-Human | Animal-Non-Human | Transportation-Vehicle</li>
+            <div>
+                <p>
+                    Several open-source datasets will be used for training and validation.
+                    A pre-trained model on the MS COCO 2017 dataset, with a Faster RCNN Resnet101 architecture,
+                    will be used to create the new 3-class model. This is transfer learning.
+                </p></div>
+            <li>Face detection model: Identify faces in Animal-Human objects</li>
+            <li>Face recognition model: Identify the person in the Animal-Human object</li>
+            </ul>
+        </ul>
+
+    </div>
+		<canvas id="canvas"></canvas>
+		<script src="jquery.js"></script>
+		<!--<script src="raphael.js"></script>-->
+		<script src="vector.js"></script>
+		<!--<script src="fish.js"></script>-->
+		<script src="main.js"></script>
+</body>
+</html>
