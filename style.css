@@ -85,6 +85,11 @@ li.nav:last-child:after {
   text-align: right;
 }
 
+iframe {
+  width: 100%;
+  height: 100%;
+}
+
 @media only screen and (max-width : 420px) {
   .text {
     max-width: 300px;
