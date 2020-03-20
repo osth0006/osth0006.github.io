@@ -5,7 +5,7 @@ $(function()
 	var MIN_MASS = .5;
 	var MAX_MASS = 3.5;
 	var FOOD_RATIO = .2;
-	var SCREEN = 1.5;
+	var SCREEN = 1.0;
 
 	// canvas elements
 	var canvas = $("#canvas")[0];

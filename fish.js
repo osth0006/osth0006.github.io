@@ -1,20 +1,43 @@
-function Fish(mass, x, y, color)
+// MASS MULTIPLIERS - these values represent the relationship between the fish's properties and its mass
+var ENERGY = 10,
+	MAX_SPEED = 12,
+	MAX_FORCE = .1,
+	SEPARATION_RANGE = 30,
+	LOOK_RANGE = 100,
+	SMELL_RANGE = 300,
+	LENGTH = 20,
+	FERTILITY = .1,
+	BITE = .1;
+
+// Fish constructor
+function Fish(mass, x, y, hue)
 {
+	// fish's properties
 	this.ID = Fish.uid();
-	this.mass = mass;
-	this.maxspeed = 12 * this.mass;
-	this.maxforce = .1 / this.mass;
-	this.separationRange = this.mass * 30;
-	this.lookRange = this.mass * 200;
-	this.length = mass * 40;
+	this.mass = mass > 0 ? mass : -mass;
+	this.energy = this.mass * ENERGY;
+	this.maxspeed = MAX_SPEED * this.mass;
+	this.maxforce = MAX_FORCE / (this.mass * this.mass);
+	this.separationRange = this.mass * SEPARATION_RANGE;
+	this.lookRange = this.mass * LOOK_RANGE;
+	this.smellRange = this.mass * SMELL_RANGE;
+	this.length = mass * LENGTH;
 	this.base = this.length * .5;
-	this.HALF_PI = Math.PI * .5;
-	this.RAD_TO_DEG = 57.29577951308232;
 	this.location = new Vector(x, y);
 	this.velocity = new Vector(0, 0);
 	this.acceleration = new Vector(0, 0);
 	this.wandering = new Vector(.2,.2);
-	this.color = color || "#8ae2a4"; //"#000000";
+	this.hue = hue || Math.random() < .5 ? Math.random()*.5 : 1 - Math.random()*.5; // <- the hue is used for color generation and mating
+	this.color = Fish.rgb2hex(Fish.hsv2rgb(this.hue, 1, 1));
+	this.skin = this.color;
+	this.dead = false;
+	this.age = 1;
+	this.fertility = (this.mass) * FERTILITY + 1;
+	this.mature = false;
+	this.bite = this.mass * BITE;
+
+	// helper
+	this.HALF_PI = Math.PI * .5;
 }
 (function(){
 	var id = 0;
@@ -24,258 +47,224 @@ function Fish(mass, x, y, color)
 	}
 })();
 
+// fish's methods
 Fish.prototype = {
-	draw: function(ctx)
+
+	// computes all the information from the enviroment and decides in which direction swim
+	swim: function(sea)
 	{
-		this.drawBehavior(ctx);
+		// surrounding fishes
+		var neighboors = this.look(sea.population, this.lookRange, Math.PI * 2);
 
-		if (ctx instanceof CanvasRenderingContext2D) // canvas
+		// nearby food
+		var nearbyFood = this.look(sea.food, this.smellRange, Math.PI * 2);
+
+		// eat food
+		for (var index in nearbyFood)
 		{
-			var angle = this.velocity.angle();
-
-			x1 = this.location.x + Math.cos(angle) * this.base;
-			y1 = this.location.y + Math.sin(angle) * this.base;
-
-			x = this.location.x - Math.cos(angle) * this.length;
-			y = this.location.y - Math.sin(angle) * this.length;
-
-			x2 = this.location.x + Math.cos(angle + this.HALF_PI) * this.base;
-			y2 = this.location.y + Math.sin(angle + this.HALF_PI) * this.base;
-
-			x3 = this.location.x + Math.cos(angle - this.HALF_PI) * this.base;
-			y3 = this.location.y + Math.sin(angle - this.HALF_PI) * this.base;
-
-			ctx.lineWidth = 2;
-			ctx.fillStyle = this.color;
-			ctx.strokeStyle = this.color;
-			ctx.beginPath();
-			ctx.moveTo(x1, y1);
-			ctx.quadraticCurveTo(x2,y2,x,y);
-			ctx.quadraticCurveTo(x3,y3,x1,y1);
-			ctx.stroke();
-			ctx.fill();
-		} 
-		else // svg
-		{ 			
-			if (this.svg)
+			var food = nearbyFood[index];
+			if (food && !food.dead)
 			{
-				var angle = this.velocity.angle() * this.RAD_TO_DEG ; // 360 / 2*PI
-				this.svg.transform("");
-				this.svg.transform("t"+this.location.x+","+this.location.y+"r"+angle);
-				this.svg.attr({
-					"stroke": this.color,
-					"fill": this.color
-				});
-				this.svg.toFront();
-			} else {
+				// go to the food
+				this.follow(food.location, food.radius / 10);
 
-				var angle = 0;
-
-				x1 = Math.cos(angle) * this.base;
-				y1 = Math.sin(angle) * this.base;
-
-				x = -(Math.cos(angle) * this.length);
-				y = -(Math.sin(angle) * this.length);
-
-				x2 = Math.cos(angle + this.HALF_PI) * this.base;
-				y2 = Math.sin(angle + this.HALF_PI) * this.base;
-
-				x3 = Math.cos(angle - this.HALF_PI) * this.base;
-				y3 = Math.sin(angle - this.HALF_PI) * this.base;
-
-				var path = "M" + [x1, y1].join(",");
-				path += "Q" + [x2,y2,x,y].join(",");
-				path += "Q" + [x3,y3,x1,y1].join(",");
-				path += "Z";
-
-				this.svg = ctx.path(path).attr({
-					'fill': this.color,
-					'stroke': this.color,
-					'stroke-width': 2
-
-				});
+				// if close enough...
+				if (this.location.dist(food.location) < food.radius)
+				{
+					// eat the food
+					food.eatenBy(this);
+				}
 			}
 		}
+
+		// find nearby fishes that aren't too big or too small
+		var friends = [];
+		for (var j in neighboors)
+		{
+			if (neighboors[j].mass < this.mass * 2 && neighboors[j].mass > this.mass / 2)
+				friends.push(neighboors[j]);
+		}
+
+		// if any, shoal with them
+		if (friends.length)
+			this.shoal(friends);
+
+		// if nobody is nearby, wander around
+		else this.wander(200);
+
+		// find nerby fishes that are way bigger than the this fish
+		var bigger = [];
+		for (var j in neighboors)
+		{
+			if (neighboors[j].mass > this.mass * 2)
+				bigger.push(neighboors[j]);
+		}
+
+		// if any, avoid it/them
+		if (bigger.length)
+			this.avoid(bigger, 300);
+
+		// find nearby fish that are way smaller than the this fish
+		var smaller = [];
+		for (var j in neighboors)
+		{
+			if (neighboors[j].mass < this.mass / 2)
+				smaller.push(neighboors[j]);
+		}
+
+		// if any, chase and eat it/them
+		if (smaller.length)
+			this.eat(smaller);
+
+		// if the fish is mature enough...
+		if (this.mature)
+		{
+			// find nearby mature fishes
+			var mature = [];
+			for (var j in neighboors)
+				if (neighboors[j].mature)
+					mature.push(neighboors[j]);
+
+			// mate with it/them
+			this.mate(mature, sea.population);
+		}
+
+		// avoid the boundaries of the sea
+		this.boundaries(sea);
 	},
-	drawBehavior: function(ctx)
+
+	// makes the fish avoid a group of fishes
+	avoid: function(fishList, dist)
 	{
+		this.avoidList = fishList;
+
+		for(var i in fishList)
+		{
+			var d = this.location.dist(fishList[i].location)
+			if (d < dist)
+			{
+				var avoid = fishList[i].location.copy().sub(this.location).mul(-100);
+				this.applyForce(avoid);
+			}
+		}
+
 		if (Fish.showBehavior)
-		{
-			var old = ctx.globalAlpha;
-			ctx.globalAlpha = .2;
-			if (this.avoidList && this.avoidList.length)
-			{
-				if (this.svg)
-				{
-					var path = "";
-					for(var i in this.avoidList)
-					{
-						path += "M" + this.location.x + "," + this.location.y;
-						path += "L" + this.avoidList[i].location.x + "," + this.avoidList[i].location.y;
-					}
-
-					if (this.avoidSVG)
-						this.avoidSVG.attr("path", path);
-					else
-						this.avoidSVG = ctx.path(path).attr({
-							'stroke': 'blue',
-							'stroke-width': 2,
-							'stroke-opacit': .5
-						});
-				} else {
-					ctx.strokeStyle = "blue";
-					ctx.lineWidth = 4;
-					ctx.beginPath();
-					for(var i in this.avoidList)
-					{
-						ctx.moveTo(this.location.x, this.location.y);
-						ctx.lineTo(this.avoidList[i].location.x, this.avoidList[i].location.y);
-					}
-					ctx.stroke();
-				}
-			} else if (this.svg && this.avoidSVG)
-			{
-				this.avoidSVG.remove()
-				this.avoidSVG = null;
-			}
-			if (this.chaseList && this.chaseList.length)
-			{
-				if (this.svg)
-				{
-					var path = "";
-					for(var i in this.chaseList)
-					{
-						path += "M" + this.location.x + "," + this.location.y;
-						path += "L" + this.chaseList[i].location.x + "," + this.chaseList[i].location.y;
-					}
-
-					if (this.chaseSVG)
-						this.chaseSVG.attr("path", path);
-					else
-						this.chaseSVG = ctx.path(path).attr({
-							'stroke': 'red',
-							'stroke-width': 2,
-							'stroke-opacit': .5
-						});
-				} else {
-					ctx.strokeStyle = "red";
-					ctx.lineWidth = 4;
-					ctx.beginPath();
-					for(var i in this.chaseList)
-					{
-						ctx.moveTo(this.location.x, this.location.y);
-						ctx.lineTo(this.chaseList[i].location.x, this.chaseList[i].location.y);
-					}
-					ctx.stroke();
-				}
-			} else if (this.svg && this.chaseSVG)
-			{
-				this.chaseSVG.remove()
-				this.chaseSVG = null;
-			}
-			if (this.shoalList && this.shoalList.length)
-			{
-				if (this.svg)
-				{
-					var path = "";
-					for(var i in this.shoalList)
-					{
-						path += "M" + this.location.x + "," + this.location.y;
-						path += "L" + this.shoalList[i].location.x + "," + this.shoalList[i].location.y;
-					}
-
-					if (this.shoalSVG)
-						this.shoalSVG.attr("path", path);
-					else
-						this.shoalSVG = ctx.path(path).attr({
-							'stroke': 'black',
-							'stroke-width': 1,
-							'stroke-opacit': .5
-						});
-				} else {
-					ctx.lineWidth = 1;
-					ctx.strokeStyle = "black";
-					ctx.beginPath();
-					for(var i in this.shoalList)
-					{
-						ctx.moveTo(this.location.x, this.location.y);
-						ctx.lineTo(this.shoalList[i].location.x, this.shoalList[i].location.y);
-					}
-					ctx.stroke();
-				}
-			}else if (this.svg && this.shoalSVG)
-			{
-				this.shoalSVG.remove()
-				this.shoalSVG = null;
-			}
-			this.avoidList = null;
-			this.chaseList = null;
-			this.shoalList = null;
-			ctx.globalAlpha = old;
-		} else {
-			this.color = "#8ae2a4";//"black";
-			if (this.svg){
-				if(this.avoidSVG)
-				{
-					this.avoidSVG.remove()
-					this.avoidSVG = null;
-				}
-				if(this.chaseSVG)
-				{
-					this.chaseSVG.remove()
-					this.chaseSVG = null;
-				}
-				if(this.shoalSVG)
-				{
-					this.shoalSVG.remove()
-					this.shoalSVG = null;
-				}
-			}
-		}
+			this.color = "blue";
 	},
-	update: function()
+
+	// makes the fish chase another group of fishes, and eat them when reaching
+	eat: function(fishList)
 	{
-		this.velocity.add(this.acceleration);
-	    this.velocity.limit(this.maxspeed);
-	    if(this.velocity.mag() < 2)
-	    	this.velocity.setMag(5);
-	    this.location.add(this.velocity);
-	    this.acceleration.mul(0);
+		this.eatList = fishList;
+
+		var that = this;
+
+		this.chase(fishList, function(fish){
+			that.energy += fish.energy;
+			fish.energy = 0;
+		});
+
+		if (Fish.showBehavior)
+			this.color = "red";
 	},
-	applyForce: function(f)
+
+
+	// emulates the shoal behaviour
+	shoal: function(fishList)
 	{
-		this.acceleration.add(f);
+		this.shoalList = fishList;
+
+		// compute vectors
+		var separation = this.separate(fishList, this.separationRange).limit(this.maxforce);
+		var alignment = this.align(fishList).limit(this.maxforce);
+		var cohesion = this.cohesion(fishList).limit(this.maxforce);
+		var affinity = this.affinity(fishList);
+
+		// shoal with fishes of very different colors won't stay together as tightly as shoals of fishes of the same color
+		separation.mul(1.2);
+		alignment.mul(1.2 * affinity);
+		cohesion.mul(1 * affinity);
+
+		// apply forces
+		this.applyForce(separation);
+		this.applyForce(alignment);
+		this.applyForce(cohesion);
+
+		if (Fish.showBehavior)
+			this.color = "black";
 	},
-	boundaries: function(world)
+
+	// makes the fish chase a mature fish or a group of mature fishes, and mate with it/them
+	mate: function(fishList, seaPopulation)
+	{
+		this.mateList = fishList;
+
+		var that = this;
+
+		this.chase(fishList, function(fish){
+
+			// set both fishes unable to mate till reaching next fertility threashold
+			that.fertility += that.mass;
+			that.mature = false;
+
+			fish.fertility += fish.mass;
+			fish.mature = false;
+
+			// DNA of the offspring
+			var location = that.location.copy().lerp(fish.location, .5);
+			var mass = (that.mass + fish.mass) / 2;
+			var color = Fish.interpolate(that.hue, fish.hue);
+
+			// mutation
+			var mutation_rate = .01;
+			mass += Math.random() < mutation_rate ? Math.random() * 2 - 1 : 0;
+			color = Math.random() < mutation_rate ? Math.random() : color;
+
+			// create offspring
+			var offspring = new Fish(mass, location.x, location.y, color);
+
+			// add to sea population
+			seaPopulation.push(offspring);
+		}, 400);
+
+		if (Fish.showBehavior)
+			this.color = "pink";
+	},
+
+	// avoid boundaries of the screen
+	boundaries: function(sea)
 	{
 		if (this.location.x < 50)
 			this.applyForce(new Vector(this.maxforce*3, 0));
 
-		if (this.location.x > world.width - 50)
+		if (this.location.x > sea.width - 50)
 			this.applyForce(new Vector(-this.maxforce*3, 0));
 
 		if (this.location.y < 50)
 			this.applyForce(new Vector(0, this.maxforce*3));
 
-		if (this.location.y > world.height - 50)
+		if (this.location.y > sea.height - 50)
 			this.applyForce(new Vector(0, -this.maxforce*3));
-
 	},
-	look: function (creatures, radius, angle)
+
+	// return an array of the nearby fish that are ahead
+	look: function (fishList, radius, angle)
 	{
 		var neighboors = [];
-		for (var i in creatures)
-			if (creatures[i] != this)
+		for (var i in fishList)
+			if (fishList[i] != null && fishList[i] != this)
 			{
-				var diff = this.location.copy().sub(creatures[i].location);
+				var diff = this.location.copy().sub(fishList[i].location);
 				var a = this.velocity.angleBetween(diff);
-				var d = this.location.dist(creatures[i].location);
+				var d = this.location.dist(fishList[i].location);
 				if (d < radius && (a < angle/2 || a > Math.PI * 2 - angle/2))
-					neighboors.push(creatures[i]);
+					neighboors.push(fishList[i]);
 			}
-				
+
 		return neighboors;
 	},
+
+	// wander behaviour (when the fish is alone, i.e. it can't see other neighboors around)
 	wander: function(radius)
 	{
 		if (Math.random() < .05) {
@@ -286,20 +275,8 @@ Fish.prototype = {
 		if (Fish.showBehavior)
 			this.color = "gray";
 	},
-	chase: function(creatures)
-	{
-		this.chaseList = creatures;
 
-		if (creatures.length == 0)
-			return;
-
-		for (var i in creatures)
-			this.applyForce(creatures[i].attract(this, 50));
-
-		if (Fish.showBehavior)
-			this.color = "red";
-
-	},
+	// makes the fish folow a target (vector)
 	follow: function(target, arrive)
 	{
 			var dest = target.copy().sub(this.location);
@@ -307,31 +284,51 @@ Fish.prototype = {
 
 			if (d < arrive)
 				dest.setMag(d/arrive*this.maxspeed);
-			else 
+			else
 				dest.setMag(this.maxspeed);
 
 			this.applyForce(dest.limit(this.maxforce*2));
 	},
+
+	// chase behaviour - makes the fish chase a group of other fishes
+	chase: function(fishList, action, force)
+	{
+		if (fishList.length == 0)
+			return;
+
+		for (var i in fishList)
+		{
+			this.applyForce(fishList[i].attract(this, force || 50));
+			if (this.location.dist(fishList[i].location) < (this.length + fishList[i].length)/2)
+				action(fishList[i]); // <- execute action when reaching a fish
+		}
+	},
+
+	// given a target vector, return a vector that would steer the fish in that direction
 	seek: function(target)
 	{
-		var seek = target.copy().sub(this.location)
+		var seek = target.copy().sub(this.location);
 		seek.normalize();
 		seek.mul(this.maxspeed);
 		seek.sub(this.velocity).limit(this.maxforce);
-		
+
 		return seek;
 	},
-	attract: function(body, f)
+
+	// attracts the fish to a desired body
+	attract: function(body, attractionForce)
 	{
 		var force = this.location.copy().sub(body.location);
 	    var distance = force.mag();
 	    distance = distance < 5 ? 5 : distance > 25 ? 25 : distance;
 	    force.normalize();
-	 
-	    var strength = (f * this.mass * body.mass) / (distance * distance);
+
+	    var strength = (attractionForce * this.mass * body.mass) / (distance * distance);
 	    force.mul(strength);
 	    return force;
 	},
+
+	// makes the fish separate from the surrounding fishes
 	separate: function(neighboors, range)
 	{
 		var sum = new Vector(0,0);
@@ -348,7 +345,7 @@ Fish.prototype = {
 					diff.div(d);
 					sum.add(diff);
 				}
-			}	
+			}
 			sum.div(neighboors.length);
 			sum.normalize();
 			sum.mul(this.maxspeed);
@@ -358,6 +355,8 @@ Fish.prototype = {
 
 		return sum;
 	},
+
+	// aligns the fish to the surrounding fishes
 	align: function(neighboors)
 	{
 		var sum = new Vector(0,0);
@@ -367,7 +366,7 @@ Fish.prototype = {
 			for (var i in neighboors)
 			{
 				sum.add(neighboors[i].velocity);
-			}	
+			}
 			sum.div(neighboors.length);
 			sum.normalize();
 			sum.mul(this.maxspeed);
@@ -377,6 +376,8 @@ Fish.prototype = {
 
 		return sum;
 	},
+
+	// moves the fish towards the center of the surrounding fishes
 	cohesion: function(neighboors)
 	{
 		var sum = new Vector(0,0);
@@ -386,48 +387,258 @@ Fish.prototype = {
 			for (var i in neighboors)
 			{
 				sum.add(neighboors[i].location);
-			}	
+			}
 			sum.div(neighboors.length);
 			return this.seek(sum);
 		}
 
 		return sum;
 	},
-	shoal: function(neighboors)
-	{
-		this.shoalList = neighboors;
 
-		var sep = this.separate(neighboors, this.separationRange).limit(this.maxforce);
-		var ali = this.align(neighboors).limit(this.maxforce);
-		var cohe = this.cohesion(neighboors).limit(this.maxforce);
-
-		sep.mul(1.4);
-		ali.mul(1.2);
-		cohe.mul(1);
-
-		this.applyForce(sep);
-		this.applyForce(ali);
-		this.applyForce(cohe);
-
-		if (Fish.showBehavior)
-			this.color = "#8ae2a4";//"black";
-	},
-	avoid: function(creatures, dist)
-	{
-		this.avoidList = creatures;
-		for(var i in creatures)
+	// return a coeficient represanting the color affinity in a group of neighboor fishes
+	affinity: function(fishList){
+		var coef = 0;
+		for (var i in fishList)
 		{
-			var d = this.location.dist(creatures[i].location)
-			if (d < dist)
-			{
-				var v = creatures[i].location.copy().sub(this.location).mul(-100);
-				this.applyForce(v);
-			}
+			var difference = Math.abs(fishList[i].hue - this.hue);
+			if (difference > .5)
+				difference = 1 - difference;
+			coef += difference
 		}
+		var affinity = 1 - (coef / fishList.length);
 
+		return affinity * affinity;
+	},
+
+	// paint the fish on the screen
+	draw: function(ctx)
+	{
+
+		// get the points to draw the fish
+		var angle = this.velocity.angle();
+
+		x1 = this.location.x + Math.cos(angle) * this.base;
+		y1 = this.location.y + Math.sin(angle) * this.base;
+
+		x = this.location.x - Math.cos(angle) * this.length;
+		y = this.location.y - Math.sin(angle) * this.length;
+
+		x2 = this.location.x + Math.cos(angle + this.HALF_PI) * this.base;
+		y2 = this.location.y + Math.sin(angle + this.HALF_PI) * this.base;
+
+		x3 = this.location.x + Math.cos(angle - this.HALF_PI) * this.base;
+		y3 = this.location.y + Math.sin(angle - this.HALF_PI) * this.base;
+
+		// draw the behaviour of the fish (lines)
+		this.drawBehavior(ctx);
+
+		if (this.energy < 0)
+			this.color = "black";
+
+		if (Fish.showBehavior && this.mature)
+			this.color = "pink";
+
+		// draw the fish on the canvas
+		ctx.lineWidth = 2;
+		ctx.fillStyle = this.color;
+		ctx.strokeStyle = this.color;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.quadraticCurveTo(x2,y2,x,y);
+		ctx.quadraticCurveTo(x3,y3,x1,y1);
+		ctx.stroke();
+		ctx.fill();
+	},
+
+	// draw what's going on inside the fish's head
+	drawBehavior: function(ctx)
+	{
 		if (Fish.showBehavior)
-			this.color = "blue";
+		{
+			var old = ctx.globalAlpha;
+			ctx.globalAlpha = .2;
+
+			// draw avoid behaviour
+			if (this.avoidList && this.avoidList.length)
+			{
+				ctx.strokeStyle = "blue";
+				ctx.lineWidth = 4;
+				ctx.beginPath();
+				for(var i in this.avoidList)
+				{
+					ctx.moveTo(this.location.x, this.location.y);
+					ctx.lineTo(this.avoidList[i].location.x, this.avoidList[i].location.y);
+				}
+				ctx.stroke();
+			}
+
+			// draw chase behaviour
+			if (this.eatList && this.eatList.length)
+			{
+				ctx.strokeStyle = "red";
+				ctx.lineWidth = 4;
+				ctx.beginPath();
+				for(var i in this.eatList)
+				{
+					ctx.moveTo(this.location.x, this.location.y);
+					ctx.lineTo(this.eatList[i].location.x, this.eatList[i].location.y);
+				}
+				ctx.stroke();
+			}
+
+			// draw shoal behaviour
+			if (this.shoalList && this.shoalList.length)
+			{
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "black";
+				ctx.beginPath();
+				for(var i in this.shoalList)
+				{
+					ctx.moveTo(this.location.x, this.location.y);
+					ctx.lineTo(this.shoalList[i].location.x, this.shoalList[i].location.y);
+				}
+				ctx.stroke();
+			}
+
+			// draw mate behaviour
+			if (this.mateList && this.mateList.length)
+			{
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "pink";
+				ctx.beginPath();
+				for(var i in this.mateList)
+				{
+					ctx.moveTo(this.location.x, this.location.y);
+					ctx.lineTo(this.mateList[i].location.x, this.mateList[i].location.y);
+				}
+				ctx.stroke();
+			}
+
+			// clear the lists
+			this.avoidList = null;
+			this.eatList = null;
+			this.shoalList = null;
+			this.mateList = null;
+
+			// restore alpha
+			ctx.globalAlpha = old;
+		} else
+			this.color = this.skin;
+	},
+
+	// update the fish's position and state
+	update: function(sea)
+	{
+		// move the fish
+		this.velocity.add(this.acceleration);
+	    this.velocity.limit(this.maxspeed);
+	    if(this.velocity.mag() < 3)
+	    	this.velocity.setMag(5);
+
+	    this.location.add(this.velocity);
+	    this.acceleration.limit(this.maxforce);
+
+	    // spend energy
+	    this.energy -= ((this.acceleration.mag() * this.mass) * this.age * this.velocity.mag()) / 100;
+
+	    // die
+	    if (this.energy < 0)
+	    {
+	    	this.dead = true;
+	    }
+
+	    // grow older
+	    this.age *= 1.00005;
+	    this.mature = this.age > this.fertility;
+
+	    // reset acceleration
+	    this.acceleration.mul(0);
+	},
+
+	// apply all the force vectors to the fish's acceleration
+	applyForce: function(f)
+	{
+		this.acceleration.add(f);
 	}
 }
 
+// draw behaviour flag
 Fish.showBehavior = false;
+
+// Color Utilities
+Fish.hex2rgb = function(h)
+{
+	var hex = h.toString().substr(1);
+	var r = parseInt(hex[0] + hex[1], 16);
+	var g = parseInt(hex[2] + hex[3], 16);
+	var b = parseInt(hex[4] + hex[5], 16);
+
+	return {
+		r: r,
+		g: g,
+		b: b
+	}
+}
+Fish.rgb2hex = function(rgb)
+{
+	rgb.r |= 0;
+	rgb.g |= 0;
+	rgb.b |= 0;
+
+	var r = rgb.r.toString(16);
+	var g = rgb.g.toString(16);
+	var b = rgb.b.toString(16);
+
+	r = r.length == 1 ? "0" + r : r;
+	g = g.length == 1 ? "0" + g : g;
+	b = b.length == 1 ? "0" + b : b;
+
+	return "#" + r.substr(0,2) + g.substr(0,2) + b.substr(0,2);
+}
+Fish.hsv2rgb = function (h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (h && s === undefined && v === undefined) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.floor(r * 255),
+        g: Math.floor(g * 255),
+        b: Math.floor(b * 255)
+    };
+}
+Fish.hue2hex = function(hue){
+	var rgb = Fish.hsv2rgb(hue, 1, 1);
+	var hex = Fish.rgb2hex(rgb);
+	return hex;
+}
+Fish.interpolate = function(colorA, colorB)
+{
+	var interpolation = -1,
+		difference = Math.abs(colorA - colorB);
+
+	if (difference > .5)
+	{
+		interpolation = (colorA > colorB ? colorA : colorB) + (1 - difference) / 2;
+
+		if (interpolation > 1)
+			interpolation -= 1;
+
+	} else
+		interpolation = (colorA + colorB) / 2;
+
+	return interpolation;
+}
+Fish.random = Math.random();
