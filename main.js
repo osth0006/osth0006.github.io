@@ -18,14 +18,14 @@ $(function()
 		creatures: []
 	}
 
-	var numFish = ($(window).width() / 600) * 50;
+	var numFish = ($(window).width() / 600) * 100;
 	var flag = false;
 	var slowmo = false;
 	var time = null;
 	var interval = 20;
 	var alpha = 1
 
-	numFish = numFish > 50 ? 50 : numFish;
+	numFish = numFish > 100 ? 100 : numFish;
 
 	$(window).mousemove(function(e)
 	{
