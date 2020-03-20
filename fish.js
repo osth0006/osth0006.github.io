@@ -6,7 +6,7 @@ function Fish(mass, x, y, color)
 	this.maxforce = .1 / this.mass;
 	this.separationRange = this.mass * 30;
 	this.lookRange = this.mass * 200;
-	this.length = mass * 30;
+	this.length = mass * 40;
 	this.base = this.length * .5;
 	this.HALF_PI = Math.PI * .5;
 	this.RAD_TO_DEG = 57.29577951308232;
