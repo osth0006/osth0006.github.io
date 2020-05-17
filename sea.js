@@ -91,7 +91,7 @@ $(function()
 		ctx.globalAlpha = 0.8;
 		ctx.fillStyle="#ffffff";
 		ctx.fillRect(0,0,canvas.width, canvas.height);
-		ctx.globalAlpha = 1;
+		ctx.globalAlpha = 0.5;
 
 		// update the food
 		for (var i in sea.food)

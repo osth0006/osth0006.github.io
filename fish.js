@@ -1,13 +1,13 @@
 // MASS MULTIPLIERS - these values represent the relationship between the fish's properties and its mass
 var ENERGY = 10,
-	MAX_SPEED = 12,
-	MAX_FORCE = .1,
+	MAX_SPEED = 4,
+	MAX_FORCE = .3,
 	SEPARATION_RANGE = 30,
 	LOOK_RANGE = 100,
 	SMELL_RANGE = 300,
 	LENGTH = 20,
 	FERTILITY = .1,
-	BITE = .1;
+	BITE = .1
 
 // Fish constructor
 function Fish(mass, x, y, hue)
@@ -38,6 +38,7 @@ function Fish(mass, x, y, hue)
 
 	// helper
 	this.HALF_PI = Math.PI * .5;
+	this.TWO_PI = Math.PI * 2;
 }
 (function(){
 	var id = 0;
@@ -439,13 +440,15 @@ Fish.prototype = {
 			this.color = "pink";
 
 		// draw the fish on the canvas
-		ctx.lineWidth = 2;
+		//ctx.lineWidth = 2;
 		ctx.fillStyle = this.color;
-		ctx.strokeStyle = this.color;
+		//ctx.strokeStyle = this.color;
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
-		ctx.quadraticCurveTo(x2,y2,x,y);
-		ctx.quadraticCurveTo(x3,y3,x1,y1);
+		//ctx.quadraticCurveTo(x2,y2,x,y);
+		//ctx.quadraticCurveTo(x3,y3,x1,y1);
+		ctx.arc(this.location.x, this.location.y, this.length / 2, 0, this.TWO_PI);
+
 		ctx.stroke();
 		ctx.fill();
 	},
