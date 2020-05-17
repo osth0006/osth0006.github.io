@@ -17,13 +17,14 @@ body {
 
 .main_text {
   max-width: 600px;
-  margin-left: -200px;
+  /*margin-left: -200px;*/
   margin-top: -140px;
   left: 50%;
   top: 50%;
   position: absolute;
   text-shadow: 0px 0px 20px white;
   line-height: 1.2;
+  font-size: 22px;
 }
 
 .text {
