@@ -445,11 +445,11 @@ Fish.prototype = {
 		//ctx.strokeStyle = this.color;
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
-		//ctx.quadraticCurveTo(x2,y2,x,y);
-		//ctx.quadraticCurveTo(x3,y3,x1,y1);
+		ctx.quadraticCurveTo(x2,y2,x,y);
+		ctx.quadraticCurveTo(x3,y3,x1,y1);
 		ctx.arc(this.location.x, this.location.y, this.length / 2, 0, this.TWO_PI);
 
-		ctx.stroke();
+		//ctx.stroke();
 		ctx.fill();
 	},
 

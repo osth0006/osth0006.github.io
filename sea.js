@@ -88,10 +88,10 @@ $(function()
 		info.html("Population: " + sea.population.length);
 
 		// clear the screen (with a fade)
-		ctx.globalAlpha = 0.8;
+		ctx.globalAlpha = 0.6;
 		ctx.fillStyle="#ffffff";
 		ctx.fillRect(0,0,canvas.width, canvas.height);
-		ctx.globalAlpha = 0.5;
+		ctx.globalAlpha = 0.2;
 
 		// update the food
 		for (var i in sea.food)
