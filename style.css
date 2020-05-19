@@ -18,16 +18,16 @@ body {
 .main_text {
   max-width: 600px;
   /*margin-left: -200px;*/
-  margin-top: -140px;
-  left: 50%;
-  top: 50%;
+  margin-top: 40px;
+  left: 5%;
+  top: 0%;
   position: absolute;
   text-shadow: 0px 0px 20px white;
   line-height: 1.2;
   font-size: 22px;
 }
 
-.text {
+/*.text {
   max-width: 900px;
   margin-left: -450px;
   margin-top: -350px;
@@ -36,7 +36,7 @@ body {
   position: absolute;
   text-shadow: 0px 0px 20px white;
   line-height: 1.2;
-}
+}*/
 
 a {
   color: #1A0DAB;
