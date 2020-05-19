@@ -5,8 +5,8 @@ var ENERGY = 10,
 	SEPARATION_RANGE = 30,
 	LOOK_RANGE = 100,
 	SMELL_RANGE = 300,
-	LENGTH = 20,
-	FERTILITY = .1,
+	LENGTH = 25,
+	FERTILITY = .2,
 	BITE = .1
 
 // Fish constructor
@@ -447,7 +447,7 @@ Fish.prototype = {
 		ctx.moveTo(x1, y1);
 		ctx.quadraticCurveTo(x2,y2,x,y);
 		ctx.quadraticCurveTo(x3,y3,x1,y1);
-		ctx.arc(this.location.x, this.location.y, this.length / 2, 0, this.TWO_PI);
+		ctx.arc(this.location.x, this.location.y, this.length, 0, this.TWO_PI);
 
 		//ctx.stroke();
 		ctx.fill();
