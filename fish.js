@@ -442,7 +442,6 @@ Fish.prototype = {
 		// draw the fish on the canvas
 		//ctx.lineWidth = 2;
 		ctx.fillStyle = this.color;
-		ctx.lineStyle = "black";
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
 		ctx.quadraticCurveTo(x2,y2,x,y);
