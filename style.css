@@ -74,3 +74,23 @@ li.nav:last-child:after {
 .play {
   text-align: right;
 }
+
+/* fullpage */
+
+.section {
+  text-align:left;
+  font-size: 3em;
+}
+
+.section-text {
+  font-size: 0.5em;
+  margin-left: 1em;
+}
+
+/* grid-gallery */
+
+.gg-container {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+
