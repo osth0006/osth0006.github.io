@@ -22,12 +22,13 @@ const backgroundImage={
 
 function NavBar() {
   return (
-    <Navbar expand="lg" className="bg-body-tertiary">
+    <Navbar expand="lg" className="bg-body-tertiary justify-content-center">
       <Container>
-        <Navbar.Brand href="#home" className="text-muted">Peter Osthus</Navbar.Brand>
+        <Navbar.Brand href="#home" className="text-muted"></Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
+            <Nav.Link href="#home" className="test-muted">Peter Osthus</Nav.Link>
             <Nav.Link href="https://www.linkedin.com/in/peter-o-686978156/" target="_blank"><Linkedin /></Nav.Link>
             <Nav.Link href="https://github.com/osth0006" target="_blank"><Github /></Nav.Link>
             {/* <NavDropdown title="Dropdown" id="basic-nav-dropdown">
