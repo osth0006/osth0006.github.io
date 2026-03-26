@@ -1,0 +1,66 @@
+---
+title: "Building Secure ML Pipelines for National Security Applications"
+date: "2026-03-15"
+excerpt: "A deep dive into designing ML pipelines that meet the security, auditability, and reliability requirements of defense and intelligence systems."
+tags: ["ML", "Security", "Pipeline"]
+---
+
+# Building Secure ML Pipelines for National Security Applications
+
+When machine learning systems are deployed in national security contexts, the standard MLOps playbook isn't enough. The stakes are fundamentally different: models must be auditable, pipelines must be tamper-resistant, and data provenance must be cryptographically verifiable.
+
+## The Threat Model
+
+Traditional ML pipelines assume a benign environment. In adversarial settings, you need to account for:
+
+- **Data poisoning** — adversaries injecting malicious samples into training data
+- **Model extraction** — unauthorized access to model weights or decision boundaries
+- **Supply chain attacks** — compromised dependencies in the training infrastructure
+- **Inference manipulation** — crafted inputs designed to produce specific misclassifications
+
+## Architecture Principles
+
+### 1. Immutable Data Lineage
+
+Every data transformation should produce a cryptographically signed record. Use content-addressable storage (like a Merkle DAG) so that any mutation to training data is immediately detectable.
+
+```python
+import hashlib
+from dataclasses import dataclass
+
+@dataclass
+class DataRecord:
+    content_hash: str
+    parent_hash: str
+    transform_id: str
+    timestamp: float
+
+    @staticmethod
+    def compute_hash(data: bytes) -> str:
+        return hashlib.sha256(data).hexdigest()
+```
+
+### 2. Isolated Training Environments
+
+Training jobs should run in hardened, air-gapped containers with no network egress. Model weights are extracted through a controlled, audited channel.
+
+### 3. Continuous Model Validation
+
+Deploy canary models alongside production. Monitor for distribution drift, adversarial inputs, and performance degradation with automated alerting.
+
+```python
+def detect_drift(reference_dist, current_dist, threshold=0.05):
+    """KL divergence-based drift detection."""
+    kl_div = sum(
+        p * log(p / q)
+        for p, q in zip(reference_dist, current_dist)
+        if p > 0 and q > 0
+    )
+    return kl_div > threshold
+```
+
+## Key Takeaways
+
+Building ML systems for national security requires thinking like both a machine learning engineer and a security engineer. The intersection of these disciplines is where the most impactful — and most challenging — work happens.
+
+The tools and patterns are evolving rapidly. What matters most is the mindset: assume breach, verify everything, and design for auditability from day one.
