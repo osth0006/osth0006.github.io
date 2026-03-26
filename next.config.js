@@ -13,6 +13,7 @@ const nextConfig = {
     unoptimized: true,
   },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  turbopack: {},
 };
 
 module.exports = withMDX(nextConfig);
